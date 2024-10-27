@@ -1,13 +1,11 @@
 const express = require("express");
-// const { validateToken } = require("../service/authService");
 const router = express.Router();
-const { checkJwt, fetchUserInfo } = require("../service/authService");
+const { fetchUserInfo } = require("../service/authService");
+const { createOrGetUser } = require("../model/user");
 
-router.use(checkJwt);
-
-router.get("/", fetchUserInfo, (req, res) => {
-    console.log(req.user);
-    res.send("Hello from profile");
+router.post("/", fetchUserInfo, async (req, res) => {
+    const [code, response] = await createOrGetUser(req, res);
+    res.status(code).json(code === 500 ? { code, ...response } : response);
 });
 
 module.exports = router;
