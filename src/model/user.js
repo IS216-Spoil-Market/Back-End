@@ -42,4 +42,42 @@ module.exports = {
             ];
         }
     },
+    /**
+     * Updates the user profile based on form values passed from the front end
+     *
+     * @param {Request} req
+     * @param {Response} res
+     * @returns {[number, Object]}
+     */
+    updateProfile: async ({ body }, res) => {
+        try {
+            // Email is purposely removed so that it won't be updated
+            const { id, email, ...rest } = body;
+
+            const updatedUser = await UserModel.findByIdAndUpdate(id, rest, {
+                new: true,
+                runValidators: true,
+            });
+
+            if (!updatedUser)
+                return [
+                    404,
+                    {
+                        error: "Not Found",
+                        message: `User with ID ${id} not found.`,
+                    },
+                ];
+
+            return [200, updatedUser];
+        } catch (e) {
+            console.log(e);
+            return [
+                500,
+                {
+                    error: "Internal Server Error",
+                    message: "There is an error updating user profile ",
+                },
+            ];
+        }
+    },
 };
