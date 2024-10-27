@@ -13,9 +13,7 @@ dotenv.config();
  */
 const checkJwt = (req, res, next) =>
     auth({
-        audience: `${req.protocol}://${req.hostname}:${
-            process.env.PORT ?? 5001
-        }`,
+        audience: process.env.AUDIENCE,
         issuerBaseURL: process.env.AUTH0_DOMAIN,
     })(req, res, next);
 
