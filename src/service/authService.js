@@ -15,6 +15,7 @@ const checkJwt = (req, res, next) =>
     auth({
         audience: process.env.AUDIENCE,
         issuerBaseURL: process.env.AUTH0_DOMAIN,
+        tokenSigningAlg: "RS256"
     })(req, res, next);
 
 /**
