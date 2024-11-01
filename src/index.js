@@ -35,6 +35,8 @@ app.use(checkJwt);
 
 // Here onwards are all the protected routes
 app.use("/profile", require("./controller/profile"));
+app.use("/chat", require("./controller/chat"));
+app.use("/message", require("./controller/message"))
 
 // Needs to be the last app.use => Global error handler
 app.use((err, req, res, next) => {
