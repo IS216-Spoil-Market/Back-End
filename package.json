@@ -17,6 +17,7 @@
         "express": "^4.21.1",
         "express-oauth2-jwt-bearer": "^1.6.0",
         "mongoose": "^8.7.3",
-        "mongoose-unique-validator": "^4.0.1"
+        "mongoose-unique-validator": "^4.0.1",
+        "socket.io": "^4.8.1"
     }
 }
