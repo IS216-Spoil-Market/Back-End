@@ -15,7 +15,7 @@ module.exports = {
             const { email, name, picture } = req.user;
 
             // Check if user exists, if exists, return the user directly
-            const retrievedUser = await UserModel.findOne({
+            let retrievedUser = await UserModel.findOne({
                 email,
             });
 
