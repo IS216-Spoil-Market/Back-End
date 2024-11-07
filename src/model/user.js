@@ -42,71 +42,7 @@ module.exports = {
             ];
         }
     },
-    /**
-* Get the users info 
-* 
-* @param {Request} req
-* @param {Response} res
-* @returns {[number, Object]}
-*/
-    getUsers: async (skill) => {
-        try {
 
-            // Check if user exists, if exists, return the user directly
-            const users = await UserModel.aggregate([
-                {
-                    $lookup: {
-                        from: "reviews",
-                        localField: "_id",
-                        foreignField: "reviewee_id",
-                        as: "userRatings"
-                    }
-
-                },
-                {
-                    $addFields: {
-                        averageRating: {               // Calculate average rating for each user
-                            $cond: {
-                                if: { $gt: [{ $size: "$userRatings" }, 0] },
-                                then: { $avg: "$userRatings.rating" },
-                                else: 0
-                            }
-                        }
-                    }
-                },
-                {
-                    $unwind: "$my_skills" 
-                },
-                {
-                    $project: {     
-                        name: 1,
-                        picture: 1,
-                        about: 1,
-                        selectedSkill: "$my_skills",
-                        averageRating: 1,
-                    }
-                }]);
-
-            if (users.length > 0) {
-                return [200, users];
-            } else {
-                return [404, {
-                    error: "Not Found",
-                    message: "Users not found"
-                }]
-            }
-
-        } catch (e) {
-            console.log(e);
-            return [
-                500,
-                {
-                    error: "Internal Server Error",
-                    message: "There is an error retrieving users info",
-                },
-            ];
-        }
-    },
 
     /**
     * Get the user info by skill
@@ -150,7 +86,8 @@ module.exports = {
                 }
             },
             {
-                $project: {    
+                $project: {  
+                    id: "$_id",  
                     name: 1,
                     picture: 1,
                     about: 1,
@@ -159,14 +96,8 @@ module.exports = {
                 }
             }]);
 
-            if (usersWithRatings.length > 0) {
-                return [200, usersWithRatings];
-            } else {
-                return [404, {
-                    error: "Not Found",
-                    message: "User with specified skills not found"
-                }]
-            }
+            return [200, usersWithRatings];
+           
 
         } catch (e) {
             console.log(e);
