@@ -60,7 +60,22 @@ app.use((err, req, res, next) => {
     });
 });
 
-app.listen(port, async () => {
+const server = app.listen(port, async () => {
     await mongoose.connect(process.env.MONGODB_CONN_URL);
     console.log(`Swaply backend listening on port ${port}`);
 });
+
+const io = require("socket.io")(server, {
+    pingTimeout:60000,
+    cors: {
+        origin: "http://localhost:3000",
+    },
+});
+
+io.on("connection", (socket) => {
+    //on "new message" event
+    socket.on('new message', (chatId) => {
+        //broadcast "message received" event to both sender's and receiver's chats
+        socket.broadcast.emit("message received", chatId);
+    });
+})
