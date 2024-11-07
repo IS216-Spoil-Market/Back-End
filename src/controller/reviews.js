@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const { postReview, getReviewById } = require("../model/reviews.js")
+const { postReview, getReviewById } = require("../model/reviews.js");
+const { getUserByEmail } = require("../service/userService.js");
 
 // post review
-router.post("/", async (req, res) => {
+router.post("/", getUserByEmail, async (req, res) => {
     try {
         const [code, response] = await postReview(req, res);
         res.status(code).json(response);

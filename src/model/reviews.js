@@ -4,7 +4,7 @@ const { Request, Response } = require("express");
 
 module.exports = {
     /**
-     * 
+     *
      * @param {Request} req
      * @param {Response} res
      * @returns {[number, Object]}
@@ -14,50 +14,57 @@ module.exports = {
     // Get reviews by id
     getReviewById: async (req, res) => {
         try {
-            const userId = req.params.id
-            
+            const userId = req.params.id;
+
             // Directly pass the `reviewee_id` to `findById` without wrapping in `{ _id: ... }`
             let retrievedUser = await UserSchema.findById(userId);
 
-            if(retrievedUser){
-                const reviews = await ReviewSchema.find({reviewee_id: userId})
+            if (retrievedUser) {
+                const reviews = await ReviewSchema.find({ reviewee_id: userId })
                     .populate("reviewer_id")
-                    .lean()
-                retrievedUser = retrievedUser.toObject()
-                retrievedUser.reviews = reviews
+                    .lean();
+                retrievedUser = retrievedUser.toObject();
+                retrievedUser.reviews = reviews;
 
                 // console.log(retrievedUser)
 
-                return [200, retrievedUser]
+                return [200, retrievedUser];
             }
 
-            return [404, {
-                error:"Not Found",
-                message: "User is not found"
-            }];
-
+            return [
+                404,
+                {
+                    error: "Not Found",
+                    message: "User is not found",
+                },
+            ];
         } catch (e) {
             console.log(e);
-            return [500, {
-                error: "Internal Server Error",
-                message: "There is an error retrieving this user by ID",
-            }]
+            return [
+                500,
+                {
+                    error: "Internal Server Error",
+                    message: "There is an error retrieving this user by ID",
+                },
+            ];
         }
     },
 
     // post reviews
-    postReview: async ({ body }, res) => {
+    postReview: async ({ body, headers }, res) => {
         try {
-            const { reviewer_id, reviewee_id, rating, review_of_user } = body;
+            const { reviewee_id, rating, review_of_user } = body;
+            const { email } = headers;
 
-            const newReview = {
-                reviewer_id: reviewer_id,
-                reviewee_id: reviewee_id,
-                rating: rating,
-                review_of_user: review_of_user
-            }
+            console.log(rating)
+            console.log(review_of_user)
 
-            let review = await ReviewSchema.create(newReview);
+            let review = await ReviewSchema.create({
+                reviewee_id,
+                rating,
+                review_of_user,
+                email,
+            });
 
             // populate is like a join to get the rows based on the reviewer_id
             review = await review.populate("reviewer_id", "name picture");
@@ -65,10 +72,9 @@ module.exports = {
 
             console.log(review);
 
-            return [200, review]
-
+            return [200, review];
         } catch (e) {
-            console.log(e)
+            console.log(e);
             return [
                 500,
                 {
@@ -77,5 +83,5 @@ module.exports = {
                 },
             ];
         }
-    }
-}
+    },
+};
