@@ -53,51 +53,78 @@ module.exports = {
     */
     getUsersBySkill: async (skill) => {
         try {
-            // Check if user exists, if exists, return the user directly
-            const usersWithRatings = await UserModel.aggregate([{
-                $match: { my_skills: { $regex: skill, $options: 'i' } }
-            },
-            {
-                $lookup: {
-                    from: "reviews",
-                    localField: "_id",
-                    foreignField: "reviewee_id",
-                    as: "userRatings"
-                }
-
-            },
-            {
-                $addFields: {
-                    averageRating: {               // Calculate average rating for each user
-                        $cond: {
-                            if: { $gt: [{ $size: "$userRatings" }, 0] },
-                            then: { $avg: "$userRatings.rating" },
-                            else: 0
-                        }
+            const matchStage = skill
+                ? {
+                    $match: {
+                        my_skills: { $regex: `^${skill}$`, $options: 'i' } // Matches the exact skill
                     }
                 }
-            },
-            {
-                $unwind: "$my_skills" 
-            },
-            {
-                $match: {
-                    my_skills: { $regex: `^${skill}`, $options: 'i' } 
-                }
-            },
-            {
-                $project: {  
-                    id: "$_id",  
-                    name: 1,
-                    picture: 1,
-                    about: 1,
-                    selectedSkill: "$my_skills",
-                    averageRating: 1,
-                }
-            }]);
+                : {};
+            // Check if user exists, if exists, return the user directly
+            const usersWithRatings = await UserModel.aggregate([
+                ...(skill ? [matchStage] : []),
+                {
+                    $lookup: {
+                        from: "reviews",
+                        localField: "_id",
+                        foreignField: "reviewee_id",
+                        as: "userRatings"
+                    }
+
+                },
+                {
+                    $addFields: {
+                        averageRating: {               // Calculate average rating for each user
+                            $cond: {
+                                if: { $gt: [{ $size: "$userRatings" }, 0] },
+                                then: { $avg: "$userRatings.rating" },
+                                else: 0
+                            }
+                        }
+                    }
+                },
+                {
+                    $unwind: "$my_skills"
+                },
+                {
+                    $group: {
+                        _id: "$_id",
+                        name: { $first: "$name" },
+                        picture: { $first: "$picture" },
+                        about: { $first: "$about" },
+                        skills: { $push: "$my_skills" },
+                        averageRating: { $first: "$averageRating" }
+                    }
+                },
+                {
+                    $addFields: {
+                        selectedSkill: skill
+                            ? {
+                                $first: {
+                                    $filter: {
+                                        input: "$skills",
+                                        as: "sk",
+                                        cond: { $regexMatch: { input: "$$sk", regex: new RegExp(`^${skill}$`, "i") } }
+                                    }
+                                }
+                            }
+                            : { $arrayElemAt: ["$skills", 0] } // Use the first skill if no specific skill is provided
+                    }
+                },
+
+                {
+                    $project: {
+                        id: "$_id",
+                        name: 1,
+                        picture: 1,
+                        about: 1,
+                        selectedSkill: 1,
+                        averageRating: 1
+                    }
+                }]);
 
             return [200, usersWithRatings];
-           
+
 
         } catch (e) {
             console.log(e);
